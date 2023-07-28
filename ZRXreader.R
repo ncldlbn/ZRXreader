@@ -7,7 +7,7 @@ library(tidyr)
 
 # Funzione per estrarre l'header del file
 HeaderExtractor <- function(file){
-  # estrai le informazioni contenute nell'header
+  # Estrai le informazioni contenute nell'header
   con <- file(file, "r")
   header <- character()
   while (TRUE) {
@@ -24,42 +24,36 @@ HeaderExtractor <- function(file){
     }
   }
   close(con)
-  # seleziona riga dell'header del file dove è presente l'header dei dati
-  stringa <- header[grep("^#LAYOUT", header)]
-  # Utilizza regmatches() per estrarre la sottostringa tra parentesi tonde
-  valori <-  gsub("\\(|\\)", "", regmatches(stringa, gregexpr("\\([^\\)]+\\)", stringa)))
-  # Dividi i valori separati da virgola in un nuovo array di stringhe
-  data_header <- unlist(strsplit(valori, ","))
   return(header)
 }
 
-# funzione per fare il parsing del timestamp in un formato più leggibile
+# Funzione per fare il parsing del timestamp in un formato più leggibile
 TimeParser <- function(df){
   output <- df %>%
-    # Trasforma la colonna datetime_string in un oggetto di classe POSIXlt
+    # Trasforma la colonna timestamp in un oggetto di classe POSIXlt
     mutate_at(vars(timestamp), ~strptime(., format = "%Y%m%d%H%M%S")) %>%
-    # separa data e ora scrivendole con il formato corretto
+    # Separa data e ora scrivendole con il formato corretto
     mutate(date = format(timestamp, format = "%Y-%m-%d"),
            time = format(timestamp, format = "%H:%M:%S")) %>%
-    # seleziona e ordina le colonne del df
+    # Seleziona e ordina le colonne del df
     select(date, time, value, status, translatedStatus)
   return(output)
 }
 
-# funzione che estrae i dati e li mette in un dataframe
+# Funzione che estrae i dati e li mette in un dataframe
 ZRX2DF <- function(file){
   head <- HeaderExtractor(file)
-  # seleziona riga dell'header del file dove è presente l'header dei dati
+  # Seleziona riga dell'header del file dove è presente l'header dei dati
   stringa <- head[grep("^#LAYOUT", head)]
-  # Utilizza regmatches() per estrarre la sottostringa tra parentesi tonde
+  # Estrai la sottostringa tra parentesi tonde
   valori <-  gsub("\\(|\\)", "", regmatches(stringa, gregexpr("\\([^\\)]+\\)", stringa)))
   # Dividi i valori separati da virgola in un nuovo array di stringhe
   data_header <- unlist(strsplit(valori, ","))
-  # estrai i dati
+  # Estrai i dati
   data <- read.table(file, skip = length(head), header = FALSE, fill = TRUE, sep = " ")
-  # nomi colonne dataframe
+  # Nomi colonne dataframe
   colnames(data) <- data_header
-  # rendi il timestamp in un formato più leggibile
+  # Rendi il timestamp in un formato più leggibile
   data <- TimeParser(data)
   return(data)
 }
@@ -67,7 +61,8 @@ ZRX2DF <- function(file){
 #-------------------------------------------------------------------------------
 # MAIN
 #-------------------------------------------------------------------------------
-# file di input
+# Percorso file di input
 inputZRX <- '00590BL_AusserrojenMod.1_RoiadiFuoriMod.1_HNS_TagSum.zrx'
 
+# da .zrx a dataframe
 df <- ZRX2DF(inputZRX)
